@@ -34,7 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed }) => {
   const menuItems = [
     { path: '/', icon: <Home size={20} />, label: 'Home', permission: null },
     { path: '/students', icon: <UserPlus size={20} />, label: 'Library Students', hasDropdown: true, permission: 'manage_library_students' },
-    { path: '/hostel', icon: <Building2 size={20} />, label: 'Hostel Students', hasDropdown: true, permission: 'manage_hostel_students' },
+    // { path: '/hostel', icon: <Building2 size={20} />, label: 'Hostel Students', hasDropdown: true, permission: 'manage_hostel_students' },
     { path: '/schedule', icon: <Calendar size={20} />, label: 'Schedule', permission: 'manage_schedules' },
     { path: '/shifts', icon: <Clock size={20} />, label: 'Shifts', permission: 'manage_schedules' },
     { path: '/seats', icon: <Grid size={20} />, label: 'Seats', permission: 'manage_seats' },

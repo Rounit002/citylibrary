@@ -280,7 +280,7 @@ const Dashboard: React.FC = () => {
               />
             </div>
             
-            <div className="my-8">
+            {/* <div className="my-8">
               <h2 className="text-xl font-semibold mb-4">Hostel Overview</h2>
               {hostelLoading ? (
                 <div className="text-center p-4 bg-white rounded-lg shadow">Loading hostel stats...</div>
@@ -349,7 +349,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 </>
               )}
-            </div>
+            </div> */}
 
             {canManageStudents && (
               <div className="mb-6">
