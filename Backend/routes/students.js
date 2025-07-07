@@ -1,6 +1,7 @@
 module.exports = (pool) => {
   const router = require('express').Router();
   const { checkAdmin, checkAdminOrStaff } = require('./auth');
+  const { checkPermissions } = require('./auth');
 
   // A helper function to add the dynamic status to the query
   const withCalculatedStatus = (selectFields = 's.*') => `
@@ -361,7 +362,7 @@ module.exports = (pool) => {
   });
 
   // POST a new student
-  router.post('/', checkAdminOrStaff, async (req, res) => {
+router.post('/', checkPermissions(['manage_library_students']), async (req, res) => {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
@@ -463,7 +464,7 @@ module.exports = (pool) => {
           return res.status(400).json({ message: `locker with ID ${lockerIdNum} is already assigned` });
         }
       }
-      
+
       const status = new Date(membership_end) < new Date() ? 'expired' : 'active';
 
       const result = await client.query(

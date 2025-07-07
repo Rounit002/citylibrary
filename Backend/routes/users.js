@@ -145,38 +145,58 @@ module.exports = (pool) => {
     }
   });
 
-  // ✅ Update user permissions
+  // ✅ FIX: Update user permissions and invalidate their session to force re-login
   router.put('/:id/permissions', checkAdmin, async (req, res) => {
+    const client = await pool.connect();
     try {
-      const { id } = req.params;
+      await client.query('BEGIN');
+      const userIdToUpdate = parseInt(req.params.id, 10);
       const { permissions } = req.body;
 
       if (!Array.isArray(permissions)) {
         return res.status(400).json({ message: 'Permissions must be an array of strings.' });
       }
 
-      const result = await pool.query(
+      const result = await client.query(
         'UPDATE users SET permissions = $1 WHERE id = $2 RETURNING id, username, role, permissions',
-        [permissions, id]
+        [permissions, userIdToUpdate]
       );
 
       if (result.rows.length === 0) {
+        await client.query('ROLLBACK');
         return res.status(404).json({ message: 'User not found.' });
       }
 
-      // ✅ If the user being edited is currently logged in, update session
-      if (req.session.user.id === parseInt(id)) {
+      // If the admin is editing their own permissions, update their session
+      if (req.session.user.id === userIdToUpdate) {
         req.session.user.permissions = permissions;
-        console.log('[users.js] Updated permissions in session:', permissions);
+        console.log(`[users.js] Admin updated their own permissions in session:`, permissions);
+      } else {
+        // If an admin is editing another user, invalidate that user's sessions to force re-login
+        console.log(`[users.js] Admin updating permissions for user ID ${userIdToUpdate}. Invalidating their sessions.`);
+        // The "sess" column in connect-pg-simple stores session data as a JSON object.
+        // We find all sessions where the sess->'user'->>'id' matches the user being updated and delete them.
+        const deleteSessionQuery = `
+          DELETE FROM session
+          WHERE (sess->'user'->>'id')::integer = $1
+        `;
+        const deleteResult = await client.query(deleteSessionQuery, [userIdToUpdate]);
+        if (deleteResult.rowCount > 0) {
+          console.log(`[users.js] Invalidated ${deleteResult.rowCount} session(s) for user ID ${userIdToUpdate}.`);
+        }
       }
 
+      await client.query('COMMIT');
       res.json({
-        message: 'User permissions updated successfully.',
+        message: 'User permissions updated successfully. The user may need to log in again to see changes.',
         user: result.rows[0],
       });
     } catch (err) {
+      await client.query('ROLLBACK');
       console.error('Error updating user permissions:', err);
       res.status(500).json({ message: 'Server error', error: err.message });
+    } finally {
+      client.release();
     }
   });
 

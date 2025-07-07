@@ -203,9 +203,14 @@ const lockersRoutes = initializeRoute('./routes/lockers', pool);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', authenticateUser, userRoutes);
 
-app.use('/api/students', authenticateUser, checkPermission('manage_library_students'), studentRoutes);
-app.use('/api/schedules', authenticateUser, checkPermission('manage_schedules'), scheduleRoutes);
-app.use('/api/seats', authenticateUser, checkPermission('manage_seats'), seatsRoutes);
+// ✅ FIX: Moved permission checks inside the route files for more granular control
+app.use('/api/students', authenticateUser, studentRoutes);
+app.use('/api/schedules', authenticateUser, scheduleRoutes);
+app.use('/api/seats', authenticateUser, seatsRoutes);
+app.use('/api/branches', authenticateUser, branchesRoutes); 
+app.use('/api/lockers', authenticateUser, lockersRoutes);
+
+// Other routes that can keep their global permissions
 app.use('/api/transactions', authenticateUser, checkPermission('view_transactions'), transactionsRoutes);
 app.use('/api/collections', authenticateUser, checkPermission('view_collections'), generalCollectionsRoutes);
 app.use('/api/expenses', authenticateUser, checkPermission('manage_expenses'), expensesRoutes);
@@ -213,9 +218,7 @@ app.use('/api/reports', authenticateUser, checkPermission('view_reports'), repor
 app.use('/api/hostel/branches', authenticateUser, checkPermission('manage_hostel_branches'), hostelBranchesRoutes);
 app.use('/api/hostel/students', authenticateUser, checkPermission('manage_hostel_students'), hostelStudentsRoutes);
 app.use('/api/hostel/collections', authenticateUser, checkPermission('view_hostel_collections'), hostelCollectionRoutes);
-app.use('/api/branches', authenticateUser, checkPermission('manage_branches'), branchesRoutes); 
 app.use('/api/products', authenticateUser, checkPermission('manage_products'), productsRoutes); 
-app.use('/api/lockers', authenticateUser, checkPermission('manage_lockers'), lockersRoutes);
 app.use('/api/settings', authenticateUser, checkAdmin, settingsRoutes);
 
 app.get('/api/test-email', async (req, res) => {

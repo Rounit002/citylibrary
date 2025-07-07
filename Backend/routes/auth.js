@@ -16,6 +16,36 @@ const checkPermission = (permission) => {
   };
 };
 
+const checkPermissions = (permissions = [], logic = 'OR') => {
+  return (req, res, next) => {
+    if (!req.session.user) {
+      return res.status(401).json({ message: 'Unauthorized - Please log in' });
+    }
+
+    // Admin role bypasses specific permission checks
+    if (req.session.user.role === 'admin') {
+      return next();
+    }
+
+    const userPermissions = req.session.user.permissions || [];
+    let hasPermission;
+
+    if (logic.toUpperCase() === 'AND') {
+      // User must have ALL of the required permissions
+      hasPermission = permissions.every(p => userPermissions.includes(p));
+    } else {
+      // User must have AT LEAST ONE of the required permissions
+      hasPermission = permissions.some(p => userPermissions.includes(p));
+    }
+
+    if (!hasPermission) {
+      return res.status(403).json({ message: 'Forbidden - Insufficient permissions' });
+    }
+    
+    return next();
+  };
+};
+
 const checkAdmin = (req, res, next) => {
   if (!req.session.user) {
     console.warn('[AUTH.JS] Admin Check Failed: No user in session for path:', req.path);
@@ -167,6 +197,7 @@ const authRouter = (pool) => {
 
 module.exports = {
   checkPermission,
+  checkPermissions,
   checkAdmin,
   checkAdminOrStaff,
   authenticateUser,

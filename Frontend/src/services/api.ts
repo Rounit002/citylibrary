@@ -33,6 +33,8 @@ interface Locker {
   isAssigned: boolean;
   studentId?: number;
   studentName?: string;
+  branchId?: number | null;
+  branchName?: string | null;
 }
 
 interface Student {
@@ -232,14 +234,14 @@ const api = {
   },
 
   getBranches: async (): Promise<Branch[]> => {
-  try {
-    const response = await apiClient.get('/branches');
-    return response.data.branches;
-  } catch (error: any) {
-    console.error('[api.ts getBranches] Error:', error.message, JSON.stringify(error.response?.data, null, 2));
-    throw new Error(error.response?.data?.message || 'Failed to fetch branches');
-  }
-},
+    try {
+      const response = await apiClient.get('/branches');
+      return response.data.branches;
+    } catch (error: any) {
+      console.error('[api.ts getBranches] Error:', error.message, JSON.stringify(error.response?.data, null, 2));
+      throw new Error(error.response?.data?.message || 'Failed to fetch branches');
+    }
+  },
 
   addBranch: async (branchData: { name: string; code?: string }): Promise<Branch> => {
     const response = await apiClient.post('/branches', branchData);
@@ -523,8 +525,8 @@ const api = {
   },
 
   updateStudent: async (
-      id: number,
-      studentData: {
+    id: number,
+    studentData: {
       name: string;
       email: string;
       phone: string;
@@ -547,7 +549,7 @@ const api = {
       profileImageUrl: string;
       aadhaarFrontUrl?: string | null;
       aadhaarBackUrl?: string | null;
-      }
+    }
   ): Promise<{ student: Student }> => {
     const response = await apiClient.put(`/students/${id}`, studentData);
     return response.data;
@@ -874,8 +876,10 @@ const api = {
     return response.data;
   },
 
-  getLockers: async (): Promise<{ lockers: Locker[] }> => {
-    const response = await apiClient.get('/lockers');
+  getLockers: async (branchId?: number): Promise<{ lockers: Locker[] }> => {
+    const params: any = {};
+    if (branchId) params.branchId = branchId;
+    const response = await apiClient.get('/lockers', { params });
     return response.data;
   },
 
@@ -884,23 +888,25 @@ const api = {
     return response.data;
   },
 
-  createLocker: async (lockerData: { lockerNumber: string }): Promise<{ locker: Locker }> => {
-  const response = await apiClient.post('/lockers', lockerData);
-  return response.data;
-  },
-  updateLocker: async (id: number, lockerData: { lockerNumber: string }): Promise<{ locker: Locker }> => {
-  const response = await apiClient.put(`/lockers/${id}`, lockerData);
-  return response.data;
-  },
-  deleteLocker: async (id: number): Promise<{ message: string }> => {
-  const response = await apiClient.delete(`/lockers/${id}`);
-  return response.data;
-  },
-  assignLocker: async (id: number, data: { studentId: number | null }): Promise<{ locker: Locker }> => {
-  const response = await apiClient.put(`/lockers/${id}/assign`, data);
-  return response.data;
+  createLocker: async (lockerData: { lockerNumber: string; branchId: number }): Promise<{ locker: Locker }> => {
+    const response = await apiClient.post('/lockers', lockerData);
+    return response.data;
   },
 
+  updateLocker: async (id: number, lockerData: { lockerNumber: string; branchId: number }): Promise<{ locker: Locker }> => {
+    const response = await apiClient.put(`/lockers/${id}`, lockerData);
+    return response.data;
+  },
+
+  deleteLocker: async (id: number): Promise<{ message: string }> => {
+    const response = await apiClient.delete(`/lockers/${id}`);
+    return response.data;
+  },
+
+  assignLocker: async (id: number, data: { studentId: number | null }): Promise<{ locker: Locker }> => {
+    const response = await apiClient.put(`/lockers/${id}/assign`, data);
+    return response.data;
+  },
 };
 
 export default api;

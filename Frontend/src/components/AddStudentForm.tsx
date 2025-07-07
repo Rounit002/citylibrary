@@ -42,12 +42,12 @@ interface SelectOption {
 
 interface FormData {
   name: string;
-  registrationNumber: string;
-  fatherName: string;
-  aadharNumber: string;
-  email: string;
+  registrationNumber?: string;
+  fatherName?: string;
+  aadharNumber?: string;
+  email?: string;
   phone: string;
-  address: string;
+  address?: string;
   branchId: number | null;
   membershipStart: string;
   membershipEnd: string;
@@ -58,13 +58,13 @@ interface FormData {
   cash: string;
   online: string;
   securityMoney: string;
-  remark: string;
+  remark?: string;
   image: File | null;
-  imageUrl: string;
+  imageUrl: string | null;
   aadhaarFront: File | null;
-  aadhaarFrontUrl: string;
+  aadhaarFrontUrl: string | null;
   aadhaarBack: File | null;
-  aadhaarBackUrl: string;
+  aadhaarBackUrl: string | null;
 }
 
 const AddStudentForm: React.FC = () => {
@@ -89,11 +89,11 @@ const AddStudentForm: React.FC = () => {
     securityMoney: '',
     remark: '',
     image: null,
-    imageUrl: '',
+    imageUrl: null,
     aadhaarFront: null,
-    aadhaarFrontUrl: '',
+    aadhaarFrontUrl: null,
     aadhaarBack: null,
-    aadhaarBackUrl: '',
+    aadhaarBackUrl: null,
   });
   const [branches, setBranches] = useState<Branch[]>([]);
   const [seats, setSeats] = useState<Seat[]>([]);
@@ -102,45 +102,56 @@ const AddStudentForm: React.FC = () => {
   const [availableShifts, setAvailableShifts] = useState<Schedule[]>([]);
   const [loadingSeats, setLoadingSeats] = useState(false);
   const [loadingShifts, setLoadingShifts] = useState(false);
+  const [loadingLockers, setLoadingLockers] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [branchesData, shiftsData, lockersData] = await Promise.all([
+        const [branchesData, shiftsData] = await Promise.all([
           api.getBranches(),
           api.getSchedules(),
-          api.getLockers(),
         ]);
         setBranches(branchesData);
         setShifts(shiftsData.schedules);
         setAvailableShifts(shiftsData.schedules);
-        setLockers(lockersData.lockers);
-      } catch (error) {
+        setError(null);
+      } catch (error: any) {
         console.error('Failed to fetch initial data:', error);
-        toast.error('Failed to load branches, shifts, or lockers');
+        setError('You do not have permission to view branches or shifts. Contact an admin.');
+        toast.error('Failed to load data. Check your permissions.');
       }
     };
     fetchInitialData();
   }, []);
 
   useEffect(() => {
-    const fetchSeats = async () => {
+    const fetchBranchSpecificData = async () => {
       if (formData.branchId !== null) {
         setLoadingSeats(true);
+        setLoadingLockers(true);
         try {
-          const seatsResponse = await api.getSeats({ branchId: formData.branchId });
+          const seatsPromise = api.getSeats({ branchId: formData.branchId });
+          const lockersPromise = api.getLockers(formData.branchId); // Pass number directly
+          const [seatsResponse, lockersResponse] = await Promise.all([seatsPromise, lockersPromise]);
+          
           setSeats(seatsResponse.seats);
+          setLockers(lockersResponse.lockers);
+          setError(null);
         } catch (error) {
-          console.error('Failed to fetch seats:', error);
-          toast.error('Failed to load seats');
+          console.error('Failed to fetch branch data:', error);
+          setError('Failed to load seats and lockers for this branch. Check permissions.');
+          toast.error('Failed to load seats and lockers.');
         } finally {
           setLoadingSeats(false);
+          setLoadingLockers(false);
         }
       } else {
         setSeats([]);
+        setLockers([]);
       }
     };
-    fetchSeats();
+    fetchBranchSpecificData();
   }, [formData.branchId]);
 
   useEffect(() => {
@@ -150,9 +161,11 @@ const AddStudentForm: React.FC = () => {
         try {
           const availableShiftsResponse = await api.getAvailableShifts(formData.seatId);
           setAvailableShifts(availableShiftsResponse.availableShifts);
+          setError(null);
         } catch (error) {
           console.error('Failed to fetch available shifts:', error);
-          toast.error('Failed to load available shifts');
+          setError('Failed to load available shifts. Check your permissions.');
+          toast.error('Failed to load shifts.');
         } finally {
           setLoadingShifts(false);
         }
@@ -169,12 +182,24 @@ const AddStudentForm: React.FC = () => {
   };
 
   const handleSelectChange = (name: keyof FormData, option: SelectOption | ShiftOption | null) => {
-    if (name === 'shiftId') {
-      const opt = option as ShiftOption | null;
-      setFormData(prev => ({ ...prev, [name]: opt ? opt.value : null }));
+    const value = option ? option.value : null;
+    
+    if (name === 'branchId') {
+      setFormData(prev => ({
+        ...prev,
+        branchId: value,
+        seatId: null,
+        shiftId: null,
+        lockerId: null,
+      }));
+    } else if (name === 'seatId') {
+      setFormData(prev => ({
+        ...prev,
+        seatId: value,
+        shiftId: null,
+      }));
     } else {
-      const opt = option as SelectOption | null;
-      setFormData(prev => ({ ...prev, [name]: opt ? opt.value : null }));
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
@@ -271,7 +296,7 @@ const AddStudentForm: React.FC = () => {
     }
 
     try {
-      let imageUrl = '';
+      let imageUrl = formData.imageUrl || '';
       if (formData.image) {
         const imageFormData = new FormData();
         imageFormData.append('image', formData.image);
@@ -285,7 +310,7 @@ const AddStudentForm: React.FC = () => {
         }
       }
 
-      let aadhaarFrontUrl = '';
+      let aadhaarFrontUrl = formData.aadhaarFrontUrl || '';
       if (formData.aadhaarFront) {
         const frontFormData = new FormData();
         frontFormData.append('image', formData.aadhaarFront);
@@ -299,7 +324,7 @@ const AddStudentForm: React.FC = () => {
         }
       }
 
-      let aadhaarBackUrl = '';
+      let aadhaarBackUrl = formData.aadhaarBackUrl || '';
       if (formData.aadhaarBack) {
         const backFormData = new FormData();
         backFormData.append('image', formData.aadhaarBack);
@@ -315,27 +340,27 @@ const AddStudentForm: React.FC = () => {
 
       const studentData = {
         name: formData.name,
-        registrationNumber: formData.registrationNumber,
-        fatherName: formData.fatherName,
-        aadharNumber: formData.aadharNumber,
-        email: formData.email,
+        registrationNumber: formData.registrationNumber || undefined,
+        fatherName: formData.fatherName || undefined,
+        aadharNumber: formData.aadharNumber || undefined,
+        email: formData.email || undefined,
         phone: formData.phone,
-        address: formData.address.trim() || '',
+        address: formData.address?.trim() || undefined,
         branchId: formData.branchId!,
         membershipStart: formData.membershipStart,
         membershipEnd: formData.membershipEnd,
-        seatId: formData.seatId !== null ? formData.seatId : null,
-        shiftIds: formData.shiftId !== null ? [formData.shiftId] : [],
-        lockerId: formData.lockerId !== null ? formData.lockerId : null,
         totalFee: formData.totalFee ? parseFloat(formData.totalFee) : 0,
         amountPaid: (parseFloat(formData.cash) || 0) + (parseFloat(formData.online) || 0),
         cash: parseFloat(formData.cash) || 0,
         online: parseFloat(formData.online) || 0,
         securityMoney: parseFloat(formData.securityMoney) || 0,
-        remark: formData.remark || '',
-        profileImageUrl: imageUrl,
-        aadhaarFrontUrl: aadhaarFrontUrl,
-        aadhaarBackUrl: aadhaarBackUrl,
+        remark: formData.remark || undefined,
+        profileImageUrl: imageUrl || undefined,
+        aadhaarFrontUrl: aadhaarFrontUrl || undefined,
+        aadhaarBackUrl: aadhaarBackUrl || undefined,
+        seatId: formData.seatId !== null ? formData.seatId : undefined,
+        shiftIds: formData.shiftId !== null ? [formData.shiftId] : [],
+        lockerId: formData.lockerId !== null ? formData.lockerId : undefined,
       };
 
       await api.addStudent(studentData);
@@ -355,6 +380,7 @@ const AddStudentForm: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Add New Student</h1>
+      {error && <div className="text-red-500 mb-4">{error}</div>}
       <div className="space-y-4">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
@@ -367,6 +393,7 @@ const AddStudentForm: React.FC = () => {
             value={formData.name}
             onChange={handleChange}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+            required
           />
         </div>
         <div>
@@ -377,7 +404,7 @@ const AddStudentForm: React.FC = () => {
             type="text"
             id="registrationNumber"
             name="registrationNumber"
-            value={formData.registrationNumber}
+            value={formData.registrationNumber || ''}
             onChange={handleChange}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
           />
@@ -390,7 +417,7 @@ const AddStudentForm: React.FC = () => {
             type="text"
             id="fatherName"
             name="fatherName"
-            value={formData.fatherName}
+            value={formData.fatherName || ''}
             onChange={handleChange}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
           />
@@ -403,7 +430,7 @@ const AddStudentForm: React.FC = () => {
             type="text"
             id="aadharNumber"
             name="aadharNumber"
-            value={formData.aadharNumber}
+            value={formData.aadharNumber || ''}
             onChange={handleChange}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
           />
@@ -416,7 +443,7 @@ const AddStudentForm: React.FC = () => {
             type="email"
             id="email"
             name="email"
-            value={formData.email}
+            value={formData.email || ''}
             onChange={handleChange}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
           />
@@ -432,6 +459,7 @@ const AddStudentForm: React.FC = () => {
             value={formData.phone}
             onChange={handleChange}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+            required
           />
         </div>
         <div>
@@ -442,7 +470,7 @@ const AddStudentForm: React.FC = () => {
             type="text"
             id="address"
             name="address"
-            value={formData.address}
+            value={formData.address || ''}
             onChange={handleChange}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
           />
@@ -457,6 +485,8 @@ const AddStudentForm: React.FC = () => {
             onChange={(option: SelectOption | null) => handleSelectChange('branchId', option)}
             placeholder="Select a branch"
             className="w-full"
+            isDisabled={branches.length === 0}
+            required
           />
         </div>
         <div>
@@ -470,6 +500,7 @@ const AddStudentForm: React.FC = () => {
             value={formData.membershipStart}
             onChange={handleChange}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+            required
           />
         </div>
         <div>
@@ -483,6 +514,7 @@ const AddStudentForm: React.FC = () => {
             value={formData.membershipEnd}
             onChange={handleChange}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+            required
           />
         </div>
         <div>
@@ -494,8 +526,9 @@ const AddStudentForm: React.FC = () => {
             value={seatOptions.find(option => option.value === formData.seatId) || null}
             onChange={(option: SelectOption | null) => handleSelectChange('seatId', option)}
             isLoading={loadingSeats}
-            placeholder="Select a seat"
+            placeholder={formData.branchId ? "Select a seat" : "Select a branch first"}
             className="w-full"
+            isDisabled={!formData.branchId || seats.length === 0}
           />
         </div>
         <div>
@@ -507,8 +540,9 @@ const AddStudentForm: React.FC = () => {
             value={shiftOptions.find(option => option.value === formData.shiftId) || null}
             onChange={(option: ShiftOption | null) => handleSelectChange('shiftId', option)}
             isLoading={loadingShifts}
-            placeholder="Select a shift"
+            placeholder={formData.seatId ? "Select a shift" : "Select a seat first"}
             className="w-full"
+            isDisabled={!formData.seatId || availableShifts.length === 0}
           />
         </div>
         <div>
@@ -519,8 +553,10 @@ const AddStudentForm: React.FC = () => {
             options={lockerOptions}
             value={lockerOptions.find(option => option.value === formData.lockerId) || null}
             onChange={(option: SelectOption | null) => handleSelectChange('lockerId', option)}
-            placeholder="Select a locker"
+            isLoading={loadingLockers}
+            placeholder={formData.branchId ? "Select an available locker" : "Select a branch first"}
             className="w-full"
+            isDisabled={!formData.branchId || lockers.length === 0}
           />
         </div>
         <div>
@@ -616,7 +652,7 @@ const AddStudentForm: React.FC = () => {
           <textarea
             id="remark"
             name="remark"
-            value={formData.remark}
+            value={formData.remark || ''}
             onChange={handleChange}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
             rows={3}
@@ -664,6 +700,7 @@ const AddStudentForm: React.FC = () => {
         <button
           onClick={handleSubmit}
           className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition duration-200"
+          disabled={!!error}
         >
           Add Student
         </button>

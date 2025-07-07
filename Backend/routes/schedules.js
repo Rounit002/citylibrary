@@ -1,12 +1,13 @@
-const { checkAdminOrStaff } = require('./auth'); // Assuming this middleware exists and is correctly set up
+// routes/schedules.js
+// ✅ FIX: Import the checkPermissions function (was already there, ensuring it's used correctly)
+const { checkPermissions } = require('./auth');
 
 module.exports = (pool) => {
   const router = require('express').Router();
 
-  // GET all schedules
-  router.get('/', async (req, res) => {
+  // ✅ FIX: Allow users who can manage students to also read schedule data
+  router.get('/', checkPermissions(['manage_schedules', 'manage_library_students'], 'OR'), async (req, res) => {
     try {
-      // Orders by the newly added 'created_at' column, then by title
       const result = await pool.query('SELECT * FROM schedules ORDER BY created_at DESC, title');
       res.json({ schedules: result.rows });
     } catch (err) {
@@ -15,11 +16,9 @@ module.exports = (pool) => {
     }
   });
 
-  // GET schedules with student counts (assuming seat_assignments links students to shifts/schedules)
-  router.get('/with-students', checkAdminOrStaff, async (req, res) => {
+  // ✅ FIX: Allow users who can manage students to also read schedule data
+  router.get('/with-students', checkPermissions(['manage_schedules', 'manage_library_students'], 'OR'), async (req, res) => {
     try {
-      // This query assumes 'seat_assignments' links 'students' (student_id) to 'schedules' (shift_id)
-      // Ensure that students.id, schedules.id, and the corresponding FKs in seat_assignments are all INTEGERS
       const result = await pool.query(`
         SELECT 
             s.id, 
@@ -42,8 +41,8 @@ module.exports = (pool) => {
     }
   });
 
-  // GET a single schedule by ID
-  router.get('/:id', async (req, res) => {
+  // ✅ FIX: Allow users who can manage students to also read schedule data
+  router.get('/:id', checkPermissions(['manage_schedules', 'manage_library_students'], 'OR'), async (req, res) => {
     try {
       const scheduleId = parseInt(req.params.id, 10);
       if (isNaN(scheduleId)) {
@@ -60,27 +59,21 @@ module.exports = (pool) => {
     }
   });
 
-  // POST a new schedule
-  router.post('/', checkAdminOrStaff, async (req, res) => {
+  // ✅ FIX: Restrict write operations to only users who can manage schedules
+  router.post('/', checkPermissions(['manage_schedules']), async (req, res) => {
     try {
-      const { title, description, time, event_date } = req.body; // event_date from frontend
-
+      const { title, description, time, event_date } = req.body;
       if (!title || !time || !event_date) {
         return res.status(400).json({ message: 'Title, time, and event_date (YYYY-MM-DD) are required' });
       }
-      // Basic validation for date format (can be more robust)
       if (!/^\d{4}-\d{2}-\d{2}$/.test(event_date)) {
         return res.status(400).json({ message: 'Invalid event_date format, use YYYY-MM-DD' });
       }
-      // Time format validation can be added here if necessary, e.g., HH:MM
-
-      // Inserts into created_at and relies on updated_at DB default or trigger
       const result = await pool.query(
         `INSERT INTO schedules (title, description, time, event_date, created_at, updated_at)
          VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *`,
         [title, description || null, time, event_date]
       );
-
       res.status(201).json({
         message: 'Schedule added successfully',
         schedule: result.rows[0]
@@ -91,21 +84,17 @@ module.exports = (pool) => {
     }
   });
 
-  // PUT (update) an existing schedule
-  router.put('/:id', checkAdminOrStaff, async (req, res) => {
+  // ✅ FIX: Restrict write operations to only users who can manage schedules
+  router.put('/:id', checkPermissions(['manage_schedules']), async (req, res) => {
     try {
       const scheduleId = parseInt(req.params.id, 10);
       if (isNaN(scheduleId)) {
         return res.status(400).json({ message: 'Invalid schedule ID format. Must be an integer.' });
       }
-      const { title, description, time, event_date } = req.body; // event_date from frontend
-
-      // Validation for date format
+      const { title, description, time, event_date } = req.body;
       if (event_date && !/^\d{4}-\d{2}-\d{2}$/.test(event_date)) {
         return res.status(400).json({ message: 'Invalid event_date format, use YYYY-MM-DD' });
       }
-      // Time format validation can be added here
-
       const result = await pool.query(
         `UPDATE schedules SET
           title = COALESCE($1, title),
@@ -116,11 +105,9 @@ module.exports = (pool) => {
          WHERE id = $5 RETURNING *`,
         [title, description, time, event_date, scheduleId]
       );
-
       if (result.rows.length === 0) {
         return res.status(404).json({ message: 'Schedule not found for update' });
       }
-
       res.json({
         message: 'Schedule updated successfully',
         schedule: result.rows[0]
@@ -131,15 +118,13 @@ module.exports = (pool) => {
     }
   });
 
-  // DELETE a schedule
-  router.delete('/:id', checkAdminOrStaff, async (req, res) => {
+  // ✅ FIX: Restrict write operations to only users who can manage schedules
+  router.delete('/:id', checkPermissions(['manage_schedules']), async (req, res) => {
     try {
       const scheduleId = parseInt(req.params.id, 10);
       if (isNaN(scheduleId)) {
         return res.status(400).json({ message: 'Invalid schedule ID format. Must be an integer.' });
       }
-      // Before deleting a schedule, consider implications for seat_assignments or other dependencies.
-      // You might need to remove related assignments first or handle it via DB constraints (ON DELETE CASCADE).
       const result = await pool.query('DELETE FROM schedules WHERE id = $1 RETURNING *', [scheduleId]);
       if (result.rows.length === 0) {
         return res.status(404).json({ message: 'Schedule not found for deletion' });
