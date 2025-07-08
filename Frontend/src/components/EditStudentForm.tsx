@@ -228,10 +228,11 @@ const EditStudentForm: React.FC = () => {
   useEffect(() => {
     const fetchSeats = async () => {
       const shiftId = parseInt(formData.shiftId, 10);
-      if (shiftId && !isNaN(shiftId)) {
+      const branchId = formData.branchId;
+      if (branchId && shiftId && !isNaN(shiftId)) {
         setLoadingSeats(true);
         try {
-          const seatsResponse = await api.getSeats({ shiftId });
+          const seatsResponse = await api.getSeats({ branchId, shiftId });
           const allSeats: Seat[] = seatsResponse.seats;
           const availableSeats = allSeats.filter((seat) => {
             const shift = seat.shifts.find((s) => s.shiftId === shiftId);
@@ -249,7 +250,7 @@ const EditStudentForm: React.FC = () => {
       }
     };
     fetchSeats();
-  }, [formData.shiftId, formData.seatId]);
+  }, [formData.branchId, formData.shiftId, formData.seatId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -283,7 +284,7 @@ const EditStudentForm: React.FC = () => {
 
   const lockerOptions = [
     { value: null, label: 'None' },
-    ...lockers.map((locker) => ({ value: locker.id, label: locker.lockerNumber + (locker.isAssigned ? ' (Assigned)' : '') })),
+    ...lockers.map((locker) => ({ value: locker.id, label: locker.lockerNumber + (locker.isAssigned && locker.studentId !== studentId ? ' (Assigned)' : '') })),
   ];
 
   const validateEmail = (email: string) => {
@@ -464,7 +465,7 @@ const EditStudentForm: React.FC = () => {
 
           <div>
             <label htmlFor="branchId" className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
-            <select id="branchId" name="branchId" value={String(formData.branchId ?? '')} onChange={(e) => setFormData((prev) => ({ ...prev, branchId: e.target.value ? parseInt(e.target.value, 10) : null, }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300">
+            <select id="branchId" name="branchId" value={String(formData.branchId ?? '')} onChange={(e) => setFormData((prev) => ({ ...prev, branchId: e.target.value ? parseInt(e.target.value, 10) : null, seatId: null, shiftId: '' }))} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300">
               <option value="">-- Select Branch --</option>
               {branches.map((branch) => (<option key={branch.id} value={branch.id}>{branch.name}</option>))}
             </select>
@@ -493,13 +494,13 @@ const EditStudentForm: React.FC = () => {
             {loadingSeats ? (
               <div>Loading seats...</div>
             ) : (
-              <Select id="seatId" name="seatId" options={seatOptions} value={seatOptions.find((option) => option.value === formData.seatId)} onChange={(selected) => setFormData((prev) => ({ ...prev, seatId: selected ? selected.value : null, }))} isSearchable placeholder="Select a seat or None" className="w-full" />
+              <Select id="seatId" name="seatId" options={seatOptions} value={seatOptions.find((option) => option.value === formData.seatId)} onChange={(selected) => setFormData((prev) => ({ ...prev, seatId: selected ? selected.value : null }))} isSearchable placeholder={formData.branchId ? "Select a seat or None" : "Select a branch first"} className="w-full" isDisabled={!formData.branchId || seats.length === 0} />
             )}
           </div>
 
           <div>
             <label htmlFor="lockerId" className="block text-sm font-medium text-gray-700 mb-1">Select Locker</label>
-            <Select id="lockerId" name="lockerId" options={lockerOptions} value={lockerOptions.find((option) => option.value === formData.lockerId)} onChange={(selected) => setFormData((prev) => ({ ...prev, lockerId: selected ? selected.value : null, }))} isSearchable placeholder="Select a locker or None" className="w-full" />
+            <Select id="lockerId" name="lockerId" options={lockerOptions} value={lockerOptions.find((option) => option.value === formData.lockerId)} onChange={(selected) => setFormData((prev) => ({ ...prev, lockerId: selected ? selected.value : null }))} isSearchable placeholder={formData.branchId ? "Select a locker or None" : "Select a branch first"} className="w-full" isDisabled={!formData.branchId || lockers.length === 0} />
           </div>
 
           <div>
