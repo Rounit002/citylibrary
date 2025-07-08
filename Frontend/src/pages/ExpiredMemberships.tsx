@@ -78,6 +78,10 @@ const ExpiredMemberships = () => {
   const [renewDialogOpen, setRenewDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   
+  // State for the new branch filter
+  const [selectedBranchFilter, setSelectedBranchFilter] = useState<{ value: number | null; label: string } | null>(null);
+  const [branchFilterOptions, setBranchFilterOptions] = useState<any[]>([]);
+
   // State for all form fields
   const [nameInput, setNameInput] = useState('');
   const [registrationNumberInput, setRegistrationNumberInput] = useState('');
@@ -103,27 +107,48 @@ const ExpiredMemberships = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // Effect to fetch supporting data (for filters and dialogs) once on component mount
   useEffect(() => {
     (async () => {
-      setLoading(true);
       try {
-        const [studentsResp, shiftsResp, branchesResp] = await Promise.all([
-          api.getExpiredMemberships(),
+        const [shiftsResp, branchesResp] = await Promise.all([
           api.getSchedules(),
           api.getBranches(),
         ]);
 
-        setStudents(studentsResp.students);
         setShiftOptions(shiftsResp.schedules.map((shift: any) => ({ value: shift.id, label: shift.title })));
+        
+        // Options for the renewal dialog's branch dropdown
         setBranchOptions(branchesResp.map((branch: any) => ({ value: branch.id, label: branch.name })));
+        
+        // Options for the main page's branch filter dropdown
+        setBranchFilterOptions([
+          { value: null, label: 'All Branches' },
+          ...branchesResp.map((branch: any) => ({ value: branch.id, label: branch.name }))
+        ]);
       } catch (e: any) {
-        console.error('Error fetching data:', e);
+        console.error('Error fetching supporting data:', e);
+        toast.error(e.message || 'Failed to fetch supporting data.');
+      }
+    })();
+  }, []);
+
+  // Effect to fetch expired students when the component mounts or the branch filter changes
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const studentsResp = await api.getExpiredMemberships(selectedBranchFilter?.value);
+        setStudents(studentsResp.students);
+      } catch (e: any) {
+        console.error('Error fetching expired memberships:', e);
         toast.error(e.message || 'Failed to fetch expired memberships.');
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [selectedBranchFilter]);
+
 
   useEffect(() => {
     if (selectedShift && selectedStudent) {
@@ -236,7 +261,7 @@ const ExpiredMemberships = () => {
       toast.success(`Membership renewed for ${selectedStudent.name}`);
       setRenewDialogOpen(false);
 
-      const resp = await api.getExpiredMemberships();
+      const resp = await api.getExpiredMemberships(selectedBranchFilter?.value);
       setStudents(resp.students);
 
     } catch (err: any) {
@@ -262,14 +287,25 @@ const ExpiredMemberships = () => {
         <Navbar />
         <div className="flex-1 p-4">
           <h2 className="text-xl font-semibold mb-4">Expired Memberships</h2>
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-3 text-gray-400" />
-            <input
-              className="pl-10 pr-4 py-2 border rounded"
-              placeholder="Search by name, phone, or Reg. No."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex items-center space-x-4 mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 text-gray-400" />
+              <input
+                className="pl-10 pr-4 py-2 border rounded"
+                placeholder="Search by name, phone, or Reg. No."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="w-64">
+              <Select
+                options={branchFilterOptions}
+                value={selectedBranchFilter}
+                onChange={setSelectedBranchFilter}
+                placeholder="Filter by Branch"
+                isClearable
+              />
+            </div>
           </div>
           {loading ? (
             <p>Loading...</p>

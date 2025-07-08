@@ -132,7 +132,7 @@ const AddStudentForm: React.FC = () => {
         setLoadingLockers(true);
         try {
           const seatsPromise = api.getSeats({ branchId: formData.branchId });
-          const lockersPromise = api.getLockers(formData.branchId); // Pass number directly
+          const lockersPromise = api.getLockers(formData.branchId);
           const [seatsResponse, lockersResponse] = await Promise.all([seatsPromise, lockersPromise]);
           
           setSeats(seatsResponse.seats);
@@ -540,9 +540,9 @@ const AddStudentForm: React.FC = () => {
             value={shiftOptions.find(option => option.value === formData.shiftId) || null}
             onChange={(option: ShiftOption | null) => handleSelectChange('shiftId', option)}
             isLoading={loadingShifts}
-            placeholder={formData.seatId ? "Select a shift" : "Select a seat first"}
+            placeholder="Select a shift"
             className="w-full"
-            isDisabled={!formData.seatId || availableShifts.length === 0}
+            isDisabled={availableShifts.length === 0} // Updated to allow shift selection even when seat is none
           />
         </div>
         <div>
