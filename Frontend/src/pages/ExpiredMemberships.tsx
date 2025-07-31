@@ -314,7 +314,7 @@ const ExpiredMemberships = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Registration Number</TableHead>
+                  <TableHead>Timing</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>Expiry</TableHead>
@@ -397,7 +397,7 @@ const ExpiredMemberships = () => {
                 />
               </div>
                <div>
-                <label className="block text-sm font-medium">Registration Number</label>
+                <label className="block text-sm font-medium">Timing</label>
                 <input
                   className="w-full border rounded px-3 py-2 mt-1"
                   type="text"

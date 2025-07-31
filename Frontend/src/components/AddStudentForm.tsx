@@ -274,8 +274,8 @@ const AddStudentForm: React.FC = () => {
   const shiftOptions: ShiftOption[] = shifts.map(shift => {
     const isAvailable = availableShifts.some(s => s.id === shift.id);
     const label = formData.seatId !== null
-      ? `${shift.title} (${shift.time} on ${shift.eventDate}) ${isAvailable ? '(Available)' : '(Assigned)'}`
-      : `${shift.title} (${shift.time} on ${shift.eventDate})`;
+      ? `${shift.title}  ${isAvailable ? '(Available)' : '(Assigned)'}`
+      : `${shift.title} -- [${shift.description}]`;
     return {
       value: shift.id,
       label,
@@ -398,7 +398,7 @@ const AddStudentForm: React.FC = () => {
         </div>
         <div>
           <label htmlFor="registrationNumber" className="block text-sm font-medium text-gray-700 mb-1">
-            Registration Number
+            Timing
           </label>
           <input
             type="text"

@@ -67,7 +67,7 @@ const InactiveStudents = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
-                      <TableHead>Registration Number</TableHead>
+                      <TableHead>Timing</TableHead>
                       <TableHead>Phone</TableHead>
                       <TableHead>Branch</TableHead>
                       <TableHead>Actions</TableHead>

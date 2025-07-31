@@ -194,7 +194,7 @@ const AllStudents = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
-                      <TableHead>Registration</TableHead>
+                      <TableHead>Timing</TableHead>
                       <TableHead>Phone</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Seat</TableHead>

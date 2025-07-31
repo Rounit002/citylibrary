@@ -122,7 +122,7 @@ const StudentList: React.FC<StudentListProps> = ({ limit, selectedBranchId }) =>
               <thead>
                 <tr className="bg-gray-50 text-left">
                   <th className="px-6 py-3 text-gray-500 font-medium">Name</th>
-                  <th className="px-6 py-3 text-gray-500 font-medium hidden md:table-cell">Registration Number</th>
+                  <th className="px-6 py-3 text-gray-500 font-medium hidden md:table-cell">Timing</th>
                   <th className="px-6 py-3 text-gray-500 font-medium hidden md:table-cell">Seat</th>
                   <th className="px-6 py-3 text-gray-500 font-medium hidden md:table-cell">Phone</th>
                   <th className="px-6 py-3 text-gray-500 font-medium">Status</th>

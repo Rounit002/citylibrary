@@ -222,7 +222,7 @@ const StudentDetails: React.FC = () => {
                     <p className="text-gray-600">{student.name || 'Unknown'}</p>
                   </div>
                   <div>
-                    <h2 className="text-lg font-medium">Registration Number</h2>
+                    <h2 className="text-lg font-medium">Timing</h2>
                     <p className="text-gray-600">{student.registrationNumber || 'N/A'}</p>
                   </div>
                   <div>

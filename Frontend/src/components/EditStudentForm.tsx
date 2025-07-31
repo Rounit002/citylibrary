@@ -434,7 +434,7 @@ const EditStudentForm: React.FC = () => {
           </div>
 
           <div>
-            <label htmlFor="registrationNumber" className="block text-sm font-medium text-gray-700 mb-1">Registration Number</label>
+            <label htmlFor="registrationNumber" className="block text-sm font-medium text-gray-700 mb-1">Timing</label>
             <input type="text" id="registrationNumber" name="registrationNumber" value={formData.registrationNumber} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300" />
           </div>
 
@@ -485,7 +485,7 @@ const EditStudentForm: React.FC = () => {
             <label htmlFor="shiftId" className="block text-sm font-medium text-gray-700 mb-1">Select Shift</label>
             <select id="shiftId" name="shiftId" value={formData.shiftId} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300">
               <option value="">-- Select Shift --</option>
-              {shifts.map((shift) => (<option key={shift.id} value={shift.id}>{shift.title} at {shift.time} ({shift.eventDate})</option>))}
+              {shifts.map((shift) => (<option key={shift.id} value={shift.id}>{shift.title} -- [{shift.description}]</option>))}
             </select>
           </div>
 
