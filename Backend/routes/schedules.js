@@ -19,21 +19,33 @@ module.exports = (pool) => {
   // ✅ FIX: Allow users who can manage students to also read schedule data
   router.get('/with-students', checkPermissions(['manage_schedules', 'manage_library_students'], 'OR'), async (req, res) => {
     try {
-      const result = await pool.query(`
+      const { branchId } = req.query;
+      const branchIdNum = branchId ? parseInt(branchId, 10) : null;
+
+      // Keep schedules visible even when count is 0 for a branch by filtering inside LEFT JOIN
+      const params = [];
+      let query = `
         SELECT 
-            s.id, 
-            s.title, 
-            s.description, 
-            s.time, 
-            s.event_date, 
-            s.created_at, 
-            s.updated_at,
-            COUNT(sa.student_id) as student_count
-        FROM schedules s
-        LEFT JOIN seat_assignments sa ON s.id = sa.shift_id 
-        GROUP BY s.id, s.title, s.description, s.time, s.event_date, s.created_at, s.updated_at
-        ORDER BY s.event_date, s.time
-      `);
+            sch.id, 
+            sch.title, 
+            sch.description, 
+            sch.time, 
+            sch.event_date, 
+            sch.created_at, 
+            sch.updated_at,
+            COUNT(sa.student_id) FILTER (WHERE ${branchIdNum ? 'st.branch_id = $1' : 'true'}) AS student_count
+        FROM schedules sch
+        LEFT JOIN seat_assignments sa 
+          ON sch.id = sa.shift_id
+        LEFT JOIN students st 
+          ON sa.student_id = st.id ${branchIdNum ? 'AND st.branch_id = $1' : ''}
+        GROUP BY sch.id, sch.title, sch.description, sch.time, sch.event_date, sch.created_at, sch.updated_at
+        ORDER BY sch.event_date, sch.time
+      `;
+
+      if (branchIdNum) params.push(branchIdNum);
+
+      const result = await pool.query(query, params);
       res.json({ schedules: result.rows });
     } catch (err) {
       console.error('Error fetching schedules with students:', err.stack);

@@ -302,7 +302,7 @@ module.exports = (pool) => {
   router.get('/shift/:shiftId', checkAdminOrStaff, async (req, res) => {
     try {
       const { shiftId } = req.params;
-      const { search, status: statusFilter } = req.query;
+      const { search, status: statusFilter, branchId } = req.query;
       
       const shiftIdNum = parseInt(shiftId, 10);
       if (isNaN(shiftIdNum)) {
@@ -347,6 +347,13 @@ module.exports = (pool) => {
         } else if (statusFilter === 'expired') {
           query += ` AND s.membership_end < CURRENT_DATE`;
         }
+      }
+
+      const branchIdNum = branchId ? parseInt(branchId, 10) : null;
+      if (branchIdNum) {
+        query += ` AND s.branch_id = $${paramIndex}`;
+        params.push(branchIdNum);
+        paramIndex++;
       }
       
       query += ` ORDER BY s.name`;

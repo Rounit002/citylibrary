@@ -53,6 +53,8 @@ const ShiftStudents: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [branches, setBranches] = useState<Array<{ id: number; name: string }>>([]);
+  const [selectedBranchId, setSelectedBranchId] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     const fetchShiftAndStudents = async () => {
@@ -66,7 +68,7 @@ const ShiftStudents: React.FC = () => {
         setShiftName(shiftResponse.title || `Shift ${shiftId}`);
 
         // The backend will handle searching by registration number with the existing `filters` object.
-        const studentsResponse = await api.getStudentsByShift(shiftId, filters);
+        const studentsResponse = await api.getStudentsByShift(shiftId, filters, selectedBranchId);
         
         if (!studentsResponse || !Array.isArray(studentsResponse.students)) {
           throw new Error('Invalid response: Students data is missing or not an array');
@@ -83,7 +85,19 @@ const ShiftStudents: React.FC = () => {
       }
     };
     fetchShiftAndStudents();
-  }, [id, filters]);
+  }, [id, filters, selectedBranchId]);
+
+  useEffect(() => {
+    const loadBranches = async () => {
+      try {
+        const list = await api.getBranches();
+        setBranches(list || []);
+      } catch (_) {
+        // ignore
+      }
+    };
+    loadBranches();
+  }, []);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -157,6 +171,24 @@ const ShiftStudents: React.FC = () => {
                       <SelectItem value="expired">Expired</SelectItem>
                     </SelectContent>
                   </Select>
+                  <div className="w-full sm:w-64">
+                    <Select
+                      value={selectedBranchId ? String(selectedBranchId) : 'all'}
+                      onValueChange={(v) => setSelectedBranchId(v === 'all' ? undefined : Number(v))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Filter by branch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All branches</SelectItem>
+                        {branches.map((b) => (
+                          <SelectItem key={b.id} value={String(b.id)}>
+                            {b.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 {isLoading ? (
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">Loading students...</div>

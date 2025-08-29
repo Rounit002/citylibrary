@@ -83,8 +83,17 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'your-very-secure-secret-key-please-change',
   resave: false,
   saveUninitialized: false,
+  rolling: true, // refresh cookie expiration on each response
   cookie: { maxAge: 24 * 60 * 60 * 1000, httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' },
 }));
+
+// Ensure active sessions stay fresh by touching the session (store TTL) during activity
+app.use((req, res, next) => {
+  if (req.session) {
+    try { req.session.touch?.(); } catch (_) {}
+  }
+  next();
+});
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

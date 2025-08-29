@@ -7,17 +7,26 @@ import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import api from '../services/api';
 import { Clock, Calendar, Users, Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const ShiftList: React.FC = () => {
   const [shifts, setShifts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [branches, setBranches] = useState<Array<{ id: number; name: string }>>([]);
+  const [selectedBranchId, setSelectedBranchId] = useState<number | undefined>(undefined);
 
   useEffect(() => {
-    const fetchShifts = async () => {
+    const fetchInitial = async () => {
       try {
-        const response = await api.getSchedulesWithStudents();
+        setIsLoading(true);
+        setError(null);
+        const [branchesRes, response] = await Promise.all([
+          api.getBranches(),
+          api.getSchedulesWithStudents(selectedBranchId),
+        ]);
+        setBranches(branchesRes || []);
         setShifts(response.schedules || []);
       } catch (err) {
         setError('Failed to load shifts. Please try again later.');
@@ -26,8 +35,8 @@ const ShiftList: React.FC = () => {
         setIsLoading(false);
       }
     };
-    fetchShifts();
-  }, []);
+    fetchInitial();
+  }, [selectedBranchId]);
 
   const formatDate = (dateString: string) => {
     return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(
@@ -57,7 +66,27 @@ const ShiftList: React.FC = () => {
                   <Clock size={24} className="text-purple-600 dark:text-purple-400" />
                   Shifts Overview
                 </CardTitle>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">View and manage your scheduled shifts</p>
+                <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-3">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">View and manage your scheduled shifts</p>
+                  <div className="ml-auto w-full sm:w-64">
+                    <Select
+                      value={selectedBranchId ? String(selectedBranchId) : 'all'}
+                      onValueChange={(v) => setSelectedBranchId(v === 'all' ? undefined : Number(v))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Filter by branch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All branches</SelectItem>
+                        {branches.map((b) => (
+                          <SelectItem key={b.id} value={String(b.id)}>
+                            {b.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="pt-6">
                 {isLoading ? (
