@@ -5,7 +5,7 @@ import Sidebar from '../components/Sidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { User, Trash2 } from 'lucide-react';
+import { User, Trash2, Edit, Eye, EyeOff } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { allPermissions } from '../config/permission';
@@ -50,6 +50,12 @@ interface FormData {
   fullName: string;
   email: string;
   oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+interface EditPasswordData {
+  userId: number;
   newPassword: string;
   confirmPassword: string;
 }
@@ -99,6 +105,13 @@ const Settings = () => {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [editingPasswordUserId, setEditingPasswordUserId] = useState<number | null>(null);
+  const [editPasswordData, setEditPasswordData] = useState<EditPasswordData>({
+    userId: 0,
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showPassword, setShowPassword] = useState(false);
 
   // Permissions that are implicitly granted with manage_library_students
   const impliedPermissions = ['manage_branches', 'manage_schedules', 'manage_seats'];
@@ -207,6 +220,17 @@ const Settings = () => {
     onError: (error: any) => toast.error(error.message || 'Failed to update settings'),
   });
 
+  const updatePasswordMutation = useMutation({
+    mutationFn: (data: { userId: number; newPassword: string }) => api.updateUserPassword(data.userId, { newPassword: data.newPassword }),
+    onSuccess: () => {
+      toast.success('Password updated successfully!');
+      setEditingPasswordUserId(null);
+      setEditPasswordData({ userId: 0, newPassword: '', confirmPassword: '' });
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+    },
+    onError: (error: any) => toast.error(error.message || 'Failed to update password'),
+  });
+
   const handleProfileUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     profileMutation.mutate({ fullName: formData.fullName || null, email: formData.email || null });
@@ -252,6 +276,41 @@ const Settings = () => {
       return;
     }
     settingsMutation.mutate({ brevoTemplateId: settingsForm.brevoTemplateId, daysBeforeExpiration });
+  };
+
+  const handleEditPassword = (userId: number) => {
+    setEditingPasswordUserId(userId);
+    setEditPasswordData({ userId, newPassword: '', confirmPassword: '' });
+  };
+
+  const handleCancelEditPassword = () => {
+    setEditingPasswordUserId(null);
+    setEditPasswordData({ userId: 0, newPassword: '', confirmPassword: '' });
+  };
+
+  const handlePasswordEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditPasswordData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleUpdatePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editPasswordData.newPassword) {
+      toast.error('New password is required');
+      return;
+    }
+    if (editPasswordData.newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return;
+    }
+    if (editPasswordData.newPassword !== editPasswordData.confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    updatePasswordMutation.mutate({
+      userId: editPasswordData.userId,
+      newPassword: editPasswordData.newPassword
+    });
   };
 
   if (!user) return <div>Please log in to access settings.</div>;
@@ -391,21 +450,81 @@ const Settings = () => {
                     <div>
                       <h4 className="text-lg font-semibold mb-2">All Users</h4>
                       {usersLoading ? <div>Loading...</div> : usersError ? <div>Error...</div> : (
-                        <ul className="space-y-3">
+                        <div className="space-y-3">
                           {allUsers?.map((u) => (
-                            <li key={u.id} className="flex justify-between items-center p-2 border rounded-md">
-                              <div>
-                                <p className="font-semibold">{u.username} <span className="text-xs font-mono p-1 bg-gray-100 rounded">{u.role}</span></p>
-                                {u.role === 'staff' && u.permissions?.length > 0 &&
-                                  <p className="text-xs text-gray-500 max-w-xs truncate">{u.permissions.join(', ')}</p>
-                                }
+                            <div key={u.id} className="border rounded-md p-3">
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <p className="font-semibold">{u.username} <span className="text-xs font-mono p-1 bg-gray-100 rounded">{u.role}</span></p>
+                                  {u.role === 'staff' && u.permissions?.length > 0 &&
+                                    <p className="text-xs text-gray-500 max-w-xs truncate">{u.permissions.join(', ')}</p>
+                                  }
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button variant="ghost" size="sm" onClick={() => handleEditPassword(u.id)}>
+                                    <Edit className="h-4 w-4 text-blue-500" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" onClick={() => handleDeleteUser(u.id)}>
+                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                  </Button>
+                                </div>
                               </div>
-                              <Button variant="ghost" size="sm" onClick={() => handleDeleteUser(u.id)}>
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </li>
+                              
+                              {editingPasswordUserId === u.id && (
+                                <div className="mt-3 pt-3 border-t">
+                                  <form onSubmit={handleUpdatePassword} className="space-y-3">
+                                    <div>
+                                      <label htmlFor="newPassword" className="text-sm font-medium">New Password</label>
+                                      <div className="relative">
+                                        <Input
+                                          id="newPassword"
+                                          name="newPassword"
+                                          type={showPassword ? 'text' : 'password'}
+                                          value={editPasswordData.newPassword}
+                                          onChange={handlePasswordEditChange}
+                                          placeholder="Enter new password"
+                                          className="pr-10"
+                                          required
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => setShowPassword(!showPassword)}
+                                          className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                        >
+                                          {showPassword ? (
+                                            <EyeOff className="h-4 w-4 text-gray-400" />
+                                          ) : (
+                                            <Eye className="h-4 w-4 text-gray-400" />
+                                          )}
+                                        </button>
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</label>
+                                      <Input
+                                        id="confirmPassword"
+                                        name="confirmPassword"
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={editPasswordData.confirmPassword}
+                                        onChange={handlePasswordEditChange}
+                                        placeholder="Confirm new password"
+                                        required
+                                      />
+                                    </div>
+                                    <div className="flex gap-2 justify-end">
+                                      <Button type="button" variant="outline" size="sm" onClick={handleCancelEditPassword}>
+                                        Cancel
+                                      </Button>
+                                      <Button type="submit" size="sm" disabled={updatePasswordMutation.isPending}>
+                                        {updatePasswordMutation.isPending ? 'Updating...' : 'Update Password'}
+                                      </Button>
+                                    </div>
+                                  </form>
+                                </div>
+                              )}
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                       )}
                     </div>
                   </div>

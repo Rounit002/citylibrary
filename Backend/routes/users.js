@@ -200,5 +200,35 @@ module.exports = (pool) => {
     }
   });
 
+  // Admin can update any user's password
+  router.put('/:id/password', checkAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { new_password } = req.body;
+
+      if (!new_password) {
+        return res.status(400).json({ message: 'New password is required' });
+      }
+
+      if (new_password.length < 6) {
+        return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+      }
+
+      const userCheck = await pool.query('SELECT id, username FROM users WHERE id = $1', [id]);
+      if (userCheck.rows.length === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      await pool.query('UPDATE users SET password = $1 WHERE id = $2', [new_password, id]);
+
+      res.json({ 
+        message: `Password updated successfully for user ${userCheck.rows[0].username}` 
+      });
+    } catch (err) {
+      console.error('Error updating user password:', err);
+      res.status(500).json({ message: 'Server error', error: err.message });
+    }
+  });
+
   return router;
 };

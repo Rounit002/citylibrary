@@ -178,11 +178,11 @@ apiClient.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      console.warn('401 Unauthorized - Redirecting to login:', error.response?.data?.message);
-      window.location.href = '/login';
+      console.warn('401 Unauthorized - Session expired but staying logged in locally:', error.response?.data?.message);
+      // Removed automatic redirect to login - user stays logged in until manual logout
     } else if (!error.response) {
       console.error('Network error - please check your connection:', error.message);
-      alert('Unable to connect to the server. Please check your network.');
+      // Removed alert for network errors to prevent interruptions
     }
     const errorData = error.response?.data || { message: error.message };
     console.error('API Error (Axios Interceptor - Response Error):', JSON.stringify(errorData, null, 2));
@@ -685,6 +685,16 @@ const api = {
       return response.data;
     } catch (error: any) {
       console.error('Error changing password:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  updateUserPassword: async (userId: number, passwordData: { newPassword: string }) => {
+    try {
+      const response = await apiClient.put(`/users/${userId}/password`, passwordData);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error updating user password:', error.response?.data || error.message);
       throw error;
     }
   },
