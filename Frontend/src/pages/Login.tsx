@@ -103,7 +103,7 @@ const Login = () => {
           </form>
 
           <div className="mt-8 text-center text-sm text-gray-700">
-            <p>City Libarary</p>
+            <p>City Libarary, Patna City</p>
           </div>
         </div>
       </div>
