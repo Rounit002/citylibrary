@@ -90,28 +90,42 @@ const ActiveStudents = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-green-50">
       <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
         <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto">
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-800">Active Students</h1>
-              <p className="text-gray-500">Manage all your active students</p>
+            <div className="mb-8">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-transparent bg-clip-text mb-4 flex items-center gap-3">
+                ✅ Active Students
+              </h1>
+              <p className="text-gray-600 text-lg">✨ Manage and monitor all your active students</p>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-gray-200 flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0">
-                <h3 className="text-lg font-medium">Active Students List</h3>
-                <div className="relative w-full md:w-64">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <input
-                    type="text"
-                    placeholder="Search students..."
-                    className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-purple-300"
-                    value={searchTerm}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                  />
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden transform hover:shadow-xl transition-all duration-300">
+              <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-green-50">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl">
+                      <Search className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 text-transparent bg-clip-text">
+                        📚 Active Students Directory
+                      </h3>
+                      <p className="text-sm text-gray-600">Currently enrolled students</p>
+                    </div>
+                  </div>
+                  <div className="relative w-full md:w-80">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <input
+                      type="text"
+                      placeholder="🔍 Search active students..."
+                      className="w-full pl-12 pr-4 py-3 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white shadow-sm hover:shadow-md transition-all duration-200"
+                      value={searchTerm}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
               {loading ? (

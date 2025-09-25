@@ -378,24 +378,50 @@ const AddStudentForm: React.FC = () => {
   const dueAmount = (parseFloat(formData.totalFee) || 0) - totalAmountPaid;
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Add New Student</h1>
-      {error && <div className="text-red-500 mb-4">{error}</div>}
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-            Name
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
-            required
-          />
+    <div className="max-w-4xl mx-auto">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transform hover:shadow-xl transition-all duration-300">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
+              <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text">
+                👤 Add New Student
+              </h1>
+              <p className="text-gray-600">Fill in the student information below</p>
+            </div>
+          </div>
         </div>
+        <div className="p-6">
+          {error && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-xl">
+              <div className="flex items-center gap-2">
+                <svg className="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-red-700 font-medium">{error}</span>
+              </div>
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
+                👤 Student Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gradient-to-r from-gray-50 to-white shadow-sm hover:shadow-md transition-all duration-200"
+                placeholder="Enter student's full name"
+                required
+              />
+            </div>
         <div>
           <label htmlFor="registrationNumber" className="block text-sm font-medium text-gray-700 mb-1">
             Timing
@@ -697,13 +723,17 @@ const AddStudentForm: React.FC = () => {
             className="w-full px-4 py-2 border border-gray-300 rounded-lg"
           />
         </div>
-        <button
-          onClick={handleSubmit}
-          className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition duration-200"
-          disabled={!!error}
-        >
-          Add Student
-        </button>
+            <div className="md:col-span-2 mt-8">
+              <button
+                onClick={handleSubmit}
+                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-4 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!!error}
+              >
+                ✨ Add Student
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ module.exports = (pool) => {
           smh.id as history_id, 
           smh.student_id, 
           smh.name, 
+          s.father_name,
           sch.title as shift_title, 
           smh.total_fee, 
           smh.amount_paid, 
@@ -21,6 +22,7 @@ module.exports = (pool) => {
           smh.branch_id,
           b.name as branch_name
         FROM student_membership_history smh
+        LEFT JOIN students s ON smh.student_id = s.id
         LEFT JOIN schedules sch ON smh.shift_id = sch.id
         LEFT JOIN branches b ON smh.branch_id = b.id
       `;
@@ -54,6 +56,7 @@ module.exports = (pool) => {
         historyId: row.history_id,
         studentId: row.student_id,
         name: row.name,
+        father_name: row.father_name,
         shiftTitle: row.shift_title,
         totalFee: row.total_fee !== null && row.total_fee !== undefined ? parseFloat(row.total_fee) : 0,
         amountPaid: row.amount_paid !== null && row.amount_paid !== undefined ? parseFloat(row.amount_paid) : 0,
@@ -204,6 +207,34 @@ module.exports = (pool) => {
       res.status(500).json({ message: 'Server error updating payment', error: err.message });
     } finally {
       client.release();
+    }
+  });
+
+  // DELETE collection record from student_membership_history
+  router.delete('/:historyId', checkAdminOrStaff, async (req, res) => {
+    try {
+      const historyId = parseInt(req.params.historyId, 10);
+      
+      if (isNaN(historyId)) {
+        return res.status(400).json({ message: 'Invalid history ID' });
+      }
+
+      // Check if the record exists
+      const checkQuery = 'SELECT id FROM student_membership_history WHERE id = $1';
+      const checkResult = await pool.query(checkQuery, [historyId]);
+      
+      if (checkResult.rows.length === 0) {
+        return res.status(404).json({ message: 'Collection record not found' });
+      }
+
+      // Delete the record from student_membership_history only
+      const deleteQuery = 'DELETE FROM student_membership_history WHERE id = $1';
+      await pool.query(deleteQuery, [historyId]);
+
+      res.json({ message: 'Collection record deleted successfully' });
+    } catch (err) {
+      console.error('Error deleting collection record:', err);
+      res.status(500).json({ message: 'Server error deleting collection record', error: err.message });
     }
   });
 

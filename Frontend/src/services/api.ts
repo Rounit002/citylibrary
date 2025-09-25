@@ -843,6 +843,16 @@ const api = {
     return response.data;
   },
 
+  deleteCollection: async (historyId: number): Promise<{ message: string }> => {
+    try {
+      const response = await apiClient.delete(`/collections/${historyId}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error deleting collection:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   getExpenses: async (branchId?: number): Promise<{ expenses: Expense[]; products: Product[] }> => {
     const params: any = {};
     if (branchId) params.branchId = branchId;
@@ -920,6 +930,61 @@ const api = {
   assignLocker: async (id: number, data: { studentId: number | null }): Promise<{ locker: Locker }> => {
     const response = await apiClient.put(`/lockers/${id}/assign`, data);
     return response.data;
+  },
+
+  // Advance Payments API methods
+  getAdvancePayments: async (filters?: { month?: string; branchId?: number }) => {
+    try {
+      const params: any = {};
+      if (filters?.month) params.month = filters.month;
+      if (filters?.branchId) params.branchId = filters.branchId;
+      
+      const response = await apiClient.get('/advance-payments', { params });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching advance payments:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  addAdvancePayment: async (paymentData: { student_id: number; amount: number; payment_date?: string; notes?: string }) => {
+    try {
+      const response = await apiClient.post('/advance-payments', paymentData);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error adding advance payment:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  getAdvancePaymentsByStudent: async (studentId: number) => {
+    try {
+      const response = await apiClient.get(`/advance-payments/student/${studentId}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching student advance payments:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  deleteAdvancePayment: async (id: number) => {
+    try {
+      const response = await apiClient.delete(`/advance-payments/${id}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error deleting advance payment:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  getAdvancePaymentStats: async () => {
+    try {
+      const response = await apiClient.get('/advance-payments/stats');
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching advance payment stats:', error.response?.data || error.message);
+      throw error;
+    }
   },
 };
 

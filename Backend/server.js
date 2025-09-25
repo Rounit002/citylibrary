@@ -208,6 +208,7 @@ const hostelCollectionRoutes = initializeRoute('./routes/hostelCollections', poo
 const branchesRoutes = initializeRoute('./routes/branches', pool);
 const productsRoutes = initializeRoute('./routes/products', pool);
 const lockersRoutes = initializeRoute('./routes/lockers', pool);
+const advancePaymentsRoutes = initializeRoute('./routes/advancePayments', pool);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', authenticateUser, userRoutes);
@@ -221,6 +222,7 @@ app.use('/api/lockers', authenticateUser, lockersRoutes);
 
 // Other routes that can keep their global permissions
 app.use('/api/transactions', authenticateUser, checkPermission('view_transactions'), transactionsRoutes);
+app.use('/api/advance-payments', authenticateUser, checkPermission('view_transactions'), advancePaymentsRoutes);
 app.use('/api/collections', authenticateUser, checkPermission('view_collections'), generalCollectionsRoutes);
 app.use('/api/expenses', authenticateUser, checkPermission('manage_expenses'), expensesRoutes);
 app.use('/api/reports', authenticateUser, checkPermission('view_reports'), reportsRoutes);

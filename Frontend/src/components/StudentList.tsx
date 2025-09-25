@@ -90,22 +90,29 @@ const StudentList: React.FC<StudentListProps> = ({ limit, selectedBranchId }) =>
       (student.seatNumber && student.seatNumber.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const indexOfLastStudent = limit ?? currentPage * studentsPerPage;
+  const indexOfLastStudent = limit ? limit : currentPage * studentsPerPage;
   const indexOfFirstStudent = limit ? 0 : indexOfLastStudent - studentsPerPage;
   const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
   const totalPages = limit ? 1 : Math.ceil(filteredStudents.length / studentsPerPage);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-      <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0">
-        <h3 className="text-lg font-medium">Students List</h3>
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transform hover:shadow-xl transition-all duration-300">
+      <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+            <Search className="h-5 w-5 text-white" />
+          </div>
+          <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text">
+            Students List
+          </h3>
+        </div>
         {!limit && (
-          <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <input
               type="text"
-              placeholder="Search students..."
-              className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-purple-300"
+              placeholder=" Search students by name, phone, or registration..."
+              className="w-full pl-12 pr-4 py-3 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm hover:shadow-md transition-all duration-200"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -120,46 +127,52 @@ const StudentList: React.FC<StudentListProps> = ({ limit, selectedBranchId }) =>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 text-left">
-                  <th className="px-6 py-3 text-gray-500 font-medium">Name</th>
-                  <th className="px-6 py-3 text-gray-500 font-medium hidden md:table-cell">Timing</th>
-                  <th className="px-6 py-3 text-gray-500 font-medium hidden md:table-cell">Seat</th>
-                  <th className="px-6 py-3 text-gray-500 font-medium hidden md:table-cell">Phone</th>
-                  <th className="px-6 py-3 text-gray-500 font-medium">Status</th>
-                  <th className="px-6 py-3 text-gray-500 font-medium hidden md:table-cell">Membership End</th>
-                  <th className="px-6 py-3 text-gray-500 font-medium">Actions</th>
+                <tr className="bg-gradient-to-r from-gray-50 to-blue-50 text-left">
+                  <th className="px-6 py-4 text-gray-700 font-semibold">👤 Name</th>
+                  <th className="px-6 py-4 text-gray-700 font-semibold hidden md:table-cell">🎫 Registration</th>
+                  <th className="px-6 py-4 text-gray-700 font-semibold hidden md:table-cell">💺 Seat</th>
+                  <th className="px-6 py-4 text-gray-700 font-semibold hidden md:table-cell">📞 Phone</th>
+                  <th className="px-6 py-4 text-gray-700 font-semibold">📊 Status</th>
+                  <th className="px-6 py-4 text-gray-700 font-semibold hidden md:table-cell">📅 Membership End</th>
+                  <th className="px-6 py-4 text-gray-700 font-semibold">⚡ Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-100">
                 {currentStudents.map((student) => (
-                  <tr key={student.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">{student.name}</td>
-                    <td className="px-6 py-4 hidden md:table-cell">{student.registrationNumber || 'N/A'}</td>
-                    <td className="px-6 py-4 hidden md:table-cell">{student.seatNumber || 'N/A'}</td>
-                    <td className="px-6 py-4 hidden md:table-cell">{student.phone}</td>
+                  <tr key={student.id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 group">
+                    <td className="px-6 py-4 font-medium text-gray-900 group-hover:text-blue-700 transition-colors duration-200">{student.name}</td>
+                    <td className="px-6 py-4 hidden md:table-cell text-gray-600">{student.registrationNumber || '—'}</td>
+                    <td className="px-6 py-4 hidden md:table-cell text-gray-600">{student.seatNumber || '—'}</td>
+                    <td className="px-6 py-4 hidden md:table-cell text-gray-600">{student.phone}</td>
                     <td className="px-6 py-4">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          student.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm ${
+                          student.status === 'active' 
+                            ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200' 
+                            : 'bg-gradient-to-r from-red-100 to-pink-100 text-red-800 border border-red-200'
                         }`}
                       >
-                        {student.status.charAt(0).toUpperCase() + student.status.slice(1)}
+                        {student.status === 'active' ? '✅ Active' : '❌ Inactive'}
                       </span>
                     </td>
                     <td className="px-6 py-4 hidden md:table-cell">{formatDate(student.membershipEnd)}</td>
                     <td className="px-6 py-4">
-                      <button
-                        onClick={() => handleViewDetails(student.id)}
-                        className="mr-2 text-blue-600 hover:text-blue-800 p-2"
-                      >
-                        <Eye size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(student.id)}
-                        className="text-red-600 hover:text-red-800 p-2"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleViewDetails(student.id)}
+                          className="p-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transform hover:scale-110 transition-all duration-200 shadow-sm hover:shadow-md"
+                          title="View Details"
+                        >
+                          <Eye size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(student.id)}
+                          className="p-2 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-lg hover:from-red-600 hover:to-pink-700 transform hover:scale-110 transition-all duration-200 shadow-sm hover:shadow-md"
+                          title="Delete Student"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -104,13 +104,15 @@ const ExpiringMemberships: React.FC<ExpiringMembershipsProps> = ({ limit, select
   const totalPages = limit ? 1 : Math.ceil(students.length / studentsPerPage);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-      <div className="p-4 border-b border-gray-100">
-        <div className="flex items-center">
-          <div className="bg-orange-100 p-2 rounded-lg">
-            <AlertCircle size={20} className="text-orange-500" />
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden transform hover:shadow-xl transition-all duration-300">
+      <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-red-50">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl shadow-sm">
+            <AlertCircle size={20} className="text-white" />
           </div>
-          <h3 className="ml-3 text-lg font-medium">Expiring Memberships</h3>
+          <h3 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 text-transparent bg-clip-text">
+            ⚠️ Expiring Memberships
+          </h3>
         </div>
       </div>
 
@@ -118,57 +120,61 @@ const ExpiringMemberships: React.FC<ExpiringMembershipsProps> = ({ limit, select
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-left">
-                <th className="px-6 py-3 text-gray-500 font-medium">Name</th>
-                <th className="px-6 py-3 text-gray-500 font-medium hidden md:table-cell">Seat</th>
-                <th className="px-6 py-3 text-gray-500 font-medium hidden md:table-cell">Phone</th>
-                <th className="px-6 py-3 text-gray-500 font-medium">Status</th>
-                <th className="px-6 py-3 text-gray-500 font-medium">Expiry Date</th>
-                <th className="px-6 py-3 text-gray-500 font-medium">Actions</th>
+              <tr className="bg-gradient-to-r from-orange-50 to-red-50 text-left">
+                <th className="px-6 py-4 text-gray-700 font-semibold">👤 Name</th>
+                <th className="px-6 py-4 text-gray-700 font-semibold hidden md:table-cell">💺 Seat</th>
+                <th className="px-6 py-4 text-gray-700 font-semibold hidden md:table-cell">📞 Phone</th>
+                <th className="px-6 py-4 text-gray-700 font-semibold">📊 Status</th>
+                <th className="px-6 py-4 text-gray-700 font-semibold">⏰ Expiry Date</th>
+                <th className="px-6 py-4 text-gray-700 font-semibold">⚡ Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-100">
               {currentStudents.map((student) => (
-                <tr key={student.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">{student.name}</td>
-                  <td className="px-6 py-4 hidden md:table-cell">{student.seatNumber || 'N/A'}</td>
-                  <td className="px-6 py-4 hidden md:table-cell">{student.phone}</td>
+                <tr key={student.id} className="hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 transition-all duration-200 group">
+                  <td className="px-6 py-4 font-medium text-gray-900 group-hover:text-orange-700 transition-colors duration-200">{student.name}</td>
+                  <td className="px-6 py-4 hidden md:table-cell text-gray-600">{student.seatNumber || '—'}</td>
+                  <td className="px-6 py-4 hidden md:table-cell text-gray-600">{student.phone}</td>
                   <td className="px-6 py-4">
                     <span
-                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        student.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm ${
+                        student.status === 'active' 
+                          ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200' 
+                          : 'bg-gradient-to-r from-red-100 to-pink-100 text-red-800 border border-red-200'
                       }`}
                     >
-                      {student.status.charAt(0).toUpperCase() + student.status.slice(1)}
+                      {student.status === 'active' ? '✅ Active' : '❌ Inactive'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="px-2 py-1 rounded-full text-xs bg-orange-100 text-orange-800">
-                      {formatDate(student.membershipEnd)}
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 border border-orange-200 shadow-sm">
+                      📅 {formatDate(student.membershipEnd)}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <button
-                      onClick={() => handleViewDetails(student.id)}
-                      className="mr-2 text-blue-600 hover:text-blue-800 p-2"
-                      title="View student details"
-                    >
-                      <Eye size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(student.id)}
-                      className="mr-2 text-red-600 hover:text-red-800 p-2"
-                      title="Delete student"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleWhatsAppClick(student.phone)}
-                      className="text-green-600 hover:text-green-800 p-2"
-                      title={`Send WhatsApp message to ${student.name}`}
-                    >
-                      <MessageSquare size={16} />
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleViewDetails(student.id)}
+                        className="p-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transform hover:scale-110 transition-all duration-200 shadow-sm hover:shadow-md"
+                        title="View student details"
+                      >
+                        <Eye size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(student.id)}
+                        className="p-2 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-lg hover:from-red-600 hover:to-pink-700 transform hover:scale-110 transition-all duration-200 shadow-sm hover:shadow-md"
+                        title="Delete student"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleWhatsAppClick(student.phone)}
+                        className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transform hover:scale-110 transition-all duration-200 shadow-sm hover:shadow-md"
+                        title={`Send WhatsApp message to ${student.name}`}
+                      >
+                        <MessageSquare size={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -3,7 +3,12 @@ import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import api, { Branch } from '../services/api';
+import api from '../services/api';
+
+interface Branch {
+  id: number;
+  name: string;
+}
 import { Search, ChevronLeft, ChevronRight, Trash2, Eye, ArrowUp, ArrowDown, ToggleLeft, ToggleRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -140,53 +145,79 @@ const AllStudents = () => {
     : null;
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
       <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
         <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto">
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-800">All Students</h1>
-              <p className="text-gray-500">Manage all your students</p>
+            <div className="mb-8">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-transparent bg-clip-text mb-4 flex items-center gap-3">
+                👥 All Students Management
+              </h1>
+              <p className="text-gray-600 text-lg">✨ Comprehensive student management and overview</p>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-gray-200 flex flex-col md:flex-row items-center justify-between gap-4">
-                <h3 className="text-lg font-medium">Students List</h3>
-                <div className="relative w-full md:w-64">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <input
-                    type="text"
-                    placeholder="Search students..."
-                    className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-purple-300"
-                    value={searchTerm}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                  />
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden transform hover:shadow-xl transition-all duration-300">
+              <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-green-50 to-emerald-50">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl">
+                      <Search className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 text-transparent bg-clip-text">
+                        📚 Students Directory
+                      </h3>
+                      <p className="text-sm text-gray-600">Manage and search all students</p>
+                    </div>
+                  </div>
+                  <div className="relative w-full md:w-80">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <input
+                      type="text"
+                      placeholder="🔍 Search students by name, phone, registration..."
+                      className="w-full pl-12 pr-4 py-3 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white shadow-sm hover:shadow-md transition-all duration-200"
+                      value={searchTerm}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="p-4 flex flex-wrap items-center gap-4">
-                <div className="flex items-center space-x-2">
-                  <label className="text-sm text-gray-500">Branch:</label>
-                  <select
-                    value={selectedBranchId ?? ''}
-                    onChange={(e) => setSelectedBranchId(e.target.value ? Number(e.target.value) : undefined)}
-                    className="p-2 border rounded text-sm"
-                  >
-                    <option value="">All Branches</option>
-                    {branches.map(branch => (
-                      <option key={branch.id} value={branch.id}>
-                        {branch.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <label className="text-sm text-gray-500">From:</label>
-                  <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="p-2 border rounded" />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <label className="text-sm text-gray-500">To:</label>
-                  <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="p-2 border rounded" />
+              <div className="p-6 bg-gradient-to-r from-gray-50 to-green-50 border-b border-gray-100">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">🏢 Branch Filter</label>
+                    <select
+                      value={selectedBranchId ?? ''}
+                      onChange={(e) => setSelectedBranchId(e.target.value ? Number(e.target.value) : undefined)}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white shadow-sm hover:shadow-md transition-all duration-200"
+                    >
+                      <option value="">🏢 All Branches</option>
+                      {branches.map(branch => (
+                        <option key={branch.id} value={branch.id}>
+                          📍 {branch.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">📅 From Date</label>
+                    <input 
+                      type="date" 
+                      value={fromDate} 
+                      onChange={(e) => setFromDate(e.target.value)} 
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white shadow-sm hover:shadow-md transition-all duration-200" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">📅 To Date</label>
+                    <input 
+                      type="date" 
+                      value={toDate} 
+                      onChange={(e) => setToDate(e.target.value)} 
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white shadow-sm hover:shadow-md transition-all duration-200" 
+                    />
+                  </div>
                 </div>
               </div>
               <div className="overflow-x-auto">
