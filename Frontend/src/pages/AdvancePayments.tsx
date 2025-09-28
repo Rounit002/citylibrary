@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Select from 'react-select';
 import { Plus, Search, Calendar, User, CreditCard, Clock, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import Sidebar from '../components/Sidebar';
@@ -64,6 +65,15 @@ const AdvancePayments: React.FC = () => {
       throw error;
     }
   };
+
+  // Searchable options for react-select
+  const studentOptions = React.useMemo(() =>
+    students.map((s) => ({
+      value: s.id,
+      label: `${s.name} - ${s.phone} (${s.registrationNumber})`
+    })),
+    [students]
+  );
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -421,19 +431,18 @@ const AdvancePayments: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Select Student *
                 </label>
-                <select
-                  value={selectedStudent || ''}
-                  onChange={(e) => setSelectedStudent(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  required
-                >
-                  <option value="">Choose a student...</option>
-                  {students.map((student) => (
-                    <option key={student.id} value={student.id}>
-                      {student.name} - {student.phone} ({student.registrationNumber})
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  options={studentOptions}
+                  placeholder="Search or select a student..."
+                  isClearable
+                  value={studentOptions.find(o => o.value === selectedStudent) || null}
+                  onChange={(opt: any) => setSelectedStudent(opt ? Number(opt.value) : null)}
+                  classNamePrefix="rs"
+                  styles={{
+                    control: (base) => ({ ...base, borderColor: '#D1D5DB', paddingTop: 2, paddingBottom: 2 }),
+                    container: (base) => ({ ...base }),
+                  }}
+                />
               </div>
 
               <div>

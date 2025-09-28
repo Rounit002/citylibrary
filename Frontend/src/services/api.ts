@@ -831,6 +831,26 @@ const api = {
     return response.data;
   },
 
+  getPreviousDuePaid: async (params: { month: string; branchId?: number }) => {
+    const response = await apiClient.get('/collections/previous-due-paid', { params });
+    return response.data as {
+      month: string;
+      totalPreviousDuePaid: number;
+      records: Array<{
+        historyId: number;
+        studentId: number;
+        name: string;
+        amount: number;
+        cash: number;
+        online: number;
+        createdAt: string;
+        branchId?: number;
+        branchName?: string;
+        sourceMonth?: string | null;
+      }>;
+    };
+  },
+
   updateCollectionPayment: async (
     historyId: number,
     paymentDetails: { amount: number; method: 'cash' | 'online' }

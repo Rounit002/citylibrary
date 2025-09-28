@@ -44,6 +44,21 @@ const CollectionDue: React.FC = () => {
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [filteredCollections, setFilteredCollections] = useState<Collection[]>([]);
+  // Previous month due paid summary/list
+  const [prevDueTotal, setPrevDueTotal] = useState<number>(0);
+  const [prevDueRecords, setPrevDueRecords] = useState<Array<{
+    historyId: number;
+    studentId: number;
+    name: string;
+    amount: number;
+    cash: number;
+    online: number;
+    createdAt: string;
+    branchId?: number;
+    branchName?: string;
+    sourceMonth?: string | null;
+  }>>([]);
+  const [showPrevDueList, setShowPrevDueList] = useState<boolean>(false);
   
   // --- Pagination State ---
   const [currentPage, setCurrentPage] = useState(1);
@@ -113,6 +128,23 @@ const CollectionDue: React.FC = () => {
     };
 
     fetchCollections();
+  }, [selectedMonth, selectedBranchId]);
+
+  // Load previous-month due paid summary for the selectedMonth (current card)
+  useEffect(() => {
+    const loadPrevDue = async () => {
+      try {
+        if (!selectedMonth) return;
+        const data = await api.getPreviousDuePaid({ month: selectedMonth, branchId: selectedBranchId ?? undefined });
+        setPrevDueTotal(data.totalPreviousDuePaid || 0);
+        setPrevDueRecords(data.records || []);
+      } catch (err) {
+        console.error('Failed to load previous due paid summary:', err);
+        setPrevDueTotal(0);
+        setPrevDueRecords([]);
+      }
+    };
+    loadPrevDue();
   }, [selectedMonth, selectedBranchId]);
 
   // Combined filtering logic
@@ -351,6 +383,19 @@ const CollectionDue: React.FC = () => {
                   <p className="text-2xl font-bold">₹{totalOnline.toLocaleString()}</p>
                 </div>
               </div>
+              {/* Previous Month Paid Due Card */}
+              <button
+                type="button"
+                onClick={() => setShowPrevDueList(true)}
+                className="text-left bg-gradient-to-br from-amber-500 to-orange-600 p-6 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-white relative overflow-hidden group"
+                title="Show students who paid previous month's due in this month"
+              >
+                <div className="absolute top-0 right-0 w-20 h-20 bg-white bg-opacity-10 rounded-full -mr-10 -mt-10"></div>
+                <div className="relative z-10">
+                  <h3 className="text-amber-100 text-sm font-medium mb-1">📅 Previous Month Paid Due</h3>
+                  <p className="text-2xl font-bold">₹{prevDueTotal.toLocaleString()}</p>
+                </div>
+              </button>
               <div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-6 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-white relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-20 h-20 bg-white bg-opacity-10 rounded-full -mr-10 -mt-10"></div>
                 <div className="relative z-10">
@@ -359,6 +404,53 @@ const CollectionDue: React.FC = () => {
                 </div>
               </div>
             </motion.div>
+
+            {/* Previous Month Due Paid List Panel */}
+            {showPrevDueList && (
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-8">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <div>
+                    <h3 className="text-lg font-semibold">Previous Month Due Paid</h3>
+                    <p className="text-sm text-gray-500">Month: {selectedMonth} • Total: ₹{prevDueTotal.toLocaleString()}</p>
+                  </div>
+                  <button onClick={() => setShowPrevDueList(false)} className="px-3 py-1.5 text-sm border rounded-md hover:bg-gray-50">Close</button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cash</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Online</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source Month</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paid On</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {prevDueRecords.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="px-4 py-4 text-center text-gray-500">No records.</td>
+                        </tr>
+                      ) : (
+                        prevDueRecords.map(r => (
+                          <tr key={r.historyId} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm text-blue-700 underline cursor-pointer" onClick={() => handleRowClick(r.studentId)}>{r.name}</td>
+                            <td className="px-4 py-3 text-sm">₹{r.amount.toFixed(2)}</td>
+                            <td className="px-4 py-3 text-sm">₹{r.cash.toFixed(2)}</td>
+                            <td className="px-4 py-3 text-sm">₹{r.online.toFixed(2)}</td>
+                            <td className="px-4 py-3 text-sm">{r.sourceMonth || '-'}</td>
+                            <td className="px-4 py-3 text-sm">{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '-'}</td>
+                            <td className="px-4 py-3 text-sm">{r.branchName || '-'}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             <div className="bg-white rounded-lg shadow-sm border overflow-x-auto">
               <div className="px-4 py-2 bg-blue-50 border-b border-blue-200 text-xs text-blue-700 font-medium">
